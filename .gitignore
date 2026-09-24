@@ -1,0 +1,67 @@
+# ==========================================
+# Root .gitignore for Live Score Update Repo
+# Covers both backend and score-client apps
+# ==========================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build Outputs & Bundles
+dist/
+dist-ssr/
+build/
+out/
+*.tsbuildinfo
+
+# Environment variables & secrets (keep .env.example tracked)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+!.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing & Coverage
+coverage/
+*.lcov
+.nyc_output
+
+# Editor & IDE configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Cache & Temp directories
+.cache/
+.eslintcache
+.stylelintcache
+.parcel-cache
+.turbo
+tmp/
+temp/
