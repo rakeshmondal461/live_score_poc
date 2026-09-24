@@ -7,7 +7,7 @@ import { socket } from "../../socket/socket.ts";
 
 export default function ViewerMatchList() {
   const { user, logout } = useAuth();
-  const [matches, setMatches] = useState<Match>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -55,16 +55,23 @@ export default function ViewerMatchList() {
   }, []);
 
   useEffect(() => {
-    socket.on("match:created", (data) => {
+    const handleCreated = (data: Match) => {
       console.log("created match", data);
-      setMatches((prev: Match[]) => [data, ...prev]);
-    });
-    socket.on("match:deleted", (data: { id: string }) => {
+      setMatches((prev) => [data, ...prev]);
+    };
+
+    const handleDeleted = (data: { id: string }) => {
       console.log("deleted match", data);
-      setMatches((prev: Match[]) =>
-        prev.filter((match: Match) => match._id !== data.id),
-      );
-    });
+      setMatches((prev) => prev.filter((match) => match._id !== data.id));
+    };
+
+    socket.on("match:created", handleCreated);
+    socket.on("match:deleted", handleDeleted);
+
+    return () => {
+      socket.off("match:created", handleCreated);
+      socket.off("match:deleted", handleDeleted);
+    };
   }, []);
 
   useEffect(() => {
