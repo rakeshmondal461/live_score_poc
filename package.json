@@ -1,0 +1,18 @@
+{
+  "name": "live-score-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo for Live Score Update app containing backend and score-client",
+  "scripts": {
+    "dev": "concurrently -n \"backend,client\" -c \"cyan,magenta\" --kill-others \"pnpm --dir backend dev\" \"wait-on tcp:5000 && pnpm --dir score-client dev\"",
+    "dev:npm": "concurrently -n \"backend,client\" -c \"cyan,magenta\" --kill-others \"npm --prefix backend run dev\" \"wait-on tcp:5000 && npm --prefix score-client run dev\"",
+    "dev:backend": "pnpm --dir backend dev",
+    "dev:client": "pnpm --dir score-client dev",
+    "seed": "pnpm --dir backend seed",
+    "build": "concurrently -n \"backend,client\" -c \"cyan,magenta\" \"pnpm --dir backend build\" \"pnpm --dir score-client build\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "wait-on": "^9.1.0"
+  }
+}

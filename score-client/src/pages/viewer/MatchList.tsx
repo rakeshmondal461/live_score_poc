@@ -57,7 +57,13 @@ export default function ViewerMatchList() {
   useEffect(() => {
     socket.on("match:created", (data) => {
       console.log("created match", data);
-      setMatches((prev) => [data, ...prev]);
+      setMatches((prev: Match[]) => [data, ...prev]);
+    });
+    socket.on("match:deleted", (data: { id: string }) => {
+      console.log("deleted match", data);
+      setMatches((prev: Match[]) =>
+        prev.filter((match: Match) => match._id !== data.id),
+      );
     });
   }, []);
 

@@ -160,6 +160,9 @@ router.delete(
         res.status(404).json({ message: "Match not found" });
         return;
       }
+      const io = getIO();
+      io.emit("match:deleted", { id: match._id });
+
       res.json({ message: "Match deleted successfully" });
     } catch {
       res.status(500).json({ message: "Server error" });

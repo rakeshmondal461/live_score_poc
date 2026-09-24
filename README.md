@@ -68,6 +68,7 @@ This application enables real-time score updates for matches (Football and Baske
 
 ```text
 live_score_update/
+├── package.json             # Root monorepo scripts (concurrent dev & build)
 ├── .gitignore               # Unified root gitignore for monorepo
 ├── README.md                # Project documentation
 ├── backend/
@@ -112,18 +113,42 @@ Before running the application, make sure you have installed:
 
 ---
 
-## 🏁 Getting Started
+## ⚡ Quick Start: Run Everything in Parallel from Root
 
-### 1. Clone Repository
+You can run both the **backend** and **frontend** simultaneously from the repository root using a single command:
 
-```bash
-git clone <YOUR_GIT_REPOSITORY_URL>
-cd live_score_update
-```
+1. **Install root & workspace dependencies**:
+   ```bash
+   # From root:
+   pnpm install
+   cd backend && pnpm install && cd ../score-client && pnpm install && cd ..
+   ```
+
+2. **Configure Backend Environment**:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+
+3. **Seed Database** (Run once from root):
+   ```bash
+   pnpm run seed
+   ```
+
+4. **Start Both Applications in Parallel**:
+   ```bash
+   pnpm run dev
+   # or: npm run dev
+   ```
+
+> 🎯 **Guaranteed Startup Order:** The script starts the backend first. Using `wait-on tcp:5000`, the frontend client automatically pauses and waits until the backend has successfully connected to MongoDB and opened its server port on `5000`. Once ready, the Vite client boots up. Both services run in one terminal with color-coded tags (`[backend]` in cyan, `[client]` in magenta). Pressing `Ctrl + C` cleanly terminates both services together.
 
 ---
 
-### 2. Backend Setup
+## 🏁 Manual Step-by-Step Setup
+
+If you prefer running services in separate terminals:
+
+### 1. Backend Setup
 
 1. **Navigate to the backend directory**:
    ```bash
@@ -166,7 +191,7 @@ cd live_score_update
 
 ---
 
-### 3. Frontend Client Setup
+### 2. Frontend Client Setup
 
 Open a new terminal window:
 
@@ -228,13 +253,22 @@ After running `pnpm run seed` in the backend:
 | `join-room` | Client ➔ Server | `matchId: string` | Joins the socket room for a specific match. |
 | `send:match:update` | Client ➔ Server | `{ roomId, ...matchData }` | Emitted by admin when updating match scores/state. |
 | `match-update` | Server ➔ Client | Updated match data | Broadcasted to everyone in that match room. |
+| `match:deleted` | Server ➔ Client | Deleted match object | Broadcasted globally when an admin deletes a match. |
 
 ---
 
 ## 📜 Scripts Reference
 
+### Root Directory (`/`)
+- `pnpm run dev`: Runs **both** backend and frontend concurrently in a single terminal with colored logs (`--kill-others` enabled).
+- `pnpm run dev:npm`: Runs both using npm `--prefix` if pnpm is not preferred.
+- `pnpm run dev:backend`: Starts only the backend dev server from root.
+- `pnpm run dev:client`: Starts only the frontend client dev server from root.
+- `pnpm run seed`: Runs the database seed script for the backend from root.
+- `pnpm run build`: Concurrently builds production bundles for both projects.
+
 ### Backend (`/backend`)
-- `pnpm run dev`: Starts development server with hot-reload via `tsx`.
+- `pnpm run dev`: Starts backend development server with hot-reload via `tsx`.
 - `pnpm run seed`: Seeds/updates the admin credentials in MongoDB.
 - `pnpm run build`: Compiles TypeScript to JavaScript into `dist/`.
 - `pnpm run start`: Runs compiled production code from `dist/index.js`.
@@ -250,3 +284,4 @@ After running `pnpm run seed` in the backend:
 ## 📄 License
 
 This project is licensed under the [ISC License](LICENSE).
+
