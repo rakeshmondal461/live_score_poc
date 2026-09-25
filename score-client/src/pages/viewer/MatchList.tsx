@@ -65,12 +65,26 @@ export default function ViewerMatchList() {
       setMatches((prev) => prev.filter((match) => match._id !== data.id));
     };
 
+    const handleStatusUpadte = (data: { id: string; status: string }) => {
+      const { id, status } = data;
+
+      setMatches((prev) => {
+        const exists = prev.some((item) => item._id === id);
+        if (!exists) return prev;
+        return prev.map((item) =>
+          item._id === id ? { ...item, status } : item,
+        );
+      });
+    };
+
     socket.on("match:created", handleCreated);
     socket.on("match:deleted", handleDeleted);
+    socket.on("match:status:update", handleStatusUpadte);
 
     return () => {
       socket.off("match:created", handleCreated);
       socket.off("match:deleted", handleDeleted);
+      socket.off("match:status:update", handleStatusUpadte);
     };
   }, []);
 

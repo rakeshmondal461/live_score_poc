@@ -104,6 +104,9 @@ router.patch(
         return;
       }
 
+      const io = getIO();
+      io.emit("match:status:update", { id: match._id, status: match.status });
+
       res.json(match);
     } catch {
       res.status(500).json({ message: "Server error" });
