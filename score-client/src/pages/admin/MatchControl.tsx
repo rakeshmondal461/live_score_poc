@@ -22,7 +22,7 @@ export default function MatchControl() {
     if (!id) return;
     void (async () => {
       try {
-        const data = (await api.matches.get(id)) as Match;
+        const data = await api.matches.get(id);
         setMatch(data);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Failed to load match");
@@ -36,9 +36,14 @@ export default function MatchControl() {
     if (!id || !match) return;
     setUpdatingScore(true);
     try {
-      const updated = (await api.matches.updateScore(id, team, delta)) as Match;
+      const updated = await api.matches.updateScore(id, team, delta);
       console.log("updated", updated);
       const { name, sport, teamA, teamB } = updated;
+      // [EMIT] send:match:update
+      // Sent to the server after a successful score update via the REST API.
+      // Payload: { roomId: match._id, payload: { name, sport, teamA, teamB } }
+      // The server forwards this as "match-update" to all sockets in the match room,
+      // so viewers on the Scoreboard page see the new score instantly.
       socket.emit("send:match:update", {
         roomId: updated._id,
         payload: { name, sport, teamA, teamB },
@@ -55,7 +60,7 @@ export default function MatchControl() {
     if (!id) return;
     setUpdatingStatus(true);
     try {
-      const updated = (await api.matches.updateStatus(id, status)) as Match;
+      const updated = await api.matches.updateStatus(id, status);
       setMatch(updated);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to update status");

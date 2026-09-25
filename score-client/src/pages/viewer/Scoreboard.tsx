@@ -18,8 +18,13 @@ export default function Scoreboard() {
   useEffect(() => {
     if (!id) return;
     let ignore = false;
+    // [EMIT] join-room
+    // Tells the server to subscribe this socket to a match-specific room
+    // so that targeted "match-update" events (score changes) are delivered
+    // only to sockets watching this particular match.
     socket.emit("join-room", id);
-    (api.matches.get(id) as Promise<Match>)
+    api.matches
+      .get(id)
       .then((data) => {
         if (!ignore) {
           setMatch(data);
@@ -42,19 +47,58 @@ export default function Scoreboard() {
   }, [id]);
 
   useEffect(() => {
-    socket.on("match-update", (data) => {
-      console.log("match update", data);
-      if (id === data.roomId) {
-        setMatch((old) => ({
-          ...old,
-          teamA: data.payload.teamA,
-          teamB: data.payload.teamB,
-        }));
-      }
-    });
-  }, []);
+    interface MatchUpdatePayload {
+      roomId: string;
+      payload: {
+        teamA: Match["teamA"];
+        teamB: Match["teamB"];
+      };
+    }
 
-  // TODO: Add socket setup here
+    // [LISTENER] match-update
+    // Emitted by the server when the admin updates the score of this match.
+    // Payload: { roomId: string, payload: { name, sport, teamA, teamB } }
+    // Action: Merges the new teamA / teamB scores into local state so the
+    //         scoreboard reflects the change instantly without a page refresh.
+    const handleMatchUpdate = (data: MatchUpdatePayload) => {
+      if (id === data.roomId) {
+        setMatch((old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            teamA: data.payload.teamA,
+            teamB: data.payload.teamB,
+          };
+        });
+      }
+    };
+    socket.on("match-update", handleMatchUpdate);
+
+    // [LISTENER] match:status:update
+    // Emitted by the server when an admin changes this match's status.
+    // Payload: { id: string, status: 'upcoming' | 'live' | 'finished' }
+    // Action: Updates the status banner on the scoreboard (e.g. shows LIVE indicator,
+    //         reveals the result banner when the match is finished).
+    const handleStatusUpadte = (data: {
+      id: string;
+      status: Match["status"];
+    }) => {
+      const { id, status } = data;
+
+      setMatch((prev) => {
+        if (!prev || prev._id !== id) return prev;
+        return { ...prev, status };
+      });
+    };
+
+    socket.on("match:status:update", handleStatusUpadte);
+
+    return () => {
+      // Remove listeners on cleanup to avoid stale handlers accumulating on re-mount.
+      socket.off("match-update", handleMatchUpdate);
+      socket.off("match:status:update", handleStatusUpadte);
+    };
+  }, []);
 
   if (loading)
     return (

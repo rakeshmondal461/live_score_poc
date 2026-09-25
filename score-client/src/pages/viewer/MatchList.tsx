@@ -13,7 +13,7 @@ export default function ViewerMatchList() {
 
   const fetchMatches = async () => {
     try {
-      const data = (await api.matches.list()) as Match[];
+      const data = await api.matches.list();
       setMatches(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load matches");
@@ -24,7 +24,8 @@ export default function ViewerMatchList() {
 
   useEffect(() => {
     let ignore = false;
-    (api.matches.list() as Promise<Match[]>)
+    api.matches
+      .list()
       .then((data) => {
         if (!ignore) {
           setMatches(data);
@@ -55,17 +56,36 @@ export default function ViewerMatchList() {
   }, []);
 
   useEffect(() => {
+    // [LISTENER] match:created
+    // Emitted by the server when an admin creates a new match.
+    // Payload: full Match document
+    // Action: Prepends the new match to the local list (deduped by _id).
     const handleCreated = (data: Match) => {
       console.log("created match", data);
-      setMatches((prev) => [data, ...prev]);
+
+      setMatches((prev) =>
+        prev.find((item) => item._id === data._id) ? prev : [data, ...prev],
+      );
     };
 
+    // [LISTENER] match:deleted
+    // Emitted by the server when an admin deletes a match.
+    // Payload: { id: string } (match _id)
+    // Action: Removes the deleted match from the local list.
     const handleDeleted = (data: { id: string }) => {
       console.log("deleted match", data);
       setMatches((prev) => prev.filter((match) => match._id !== data.id));
     };
 
-    const handleStatusUpadte = (data: { id: string; status: string }) => {
+    // [LISTENER] match:status:update
+    // Emitted by the server whenever an admin changes a match's status
+    //   (upcoming → live → finished).
+    // Payload: { id: string, status: 'upcoming' | 'live' | 'finished' }
+    // Action: Updates the status badge of the affected match card in-place.
+    const handleStatusUpadte = (data: {
+      id: string;
+      status: Match["status"];
+    }) => {
       const { id, status } = data;
 
       setMatches((prev) => {
@@ -82,15 +102,12 @@ export default function ViewerMatchList() {
     socket.on("match:status:update", handleStatusUpadte);
 
     return () => {
+      // Remove all listeners on cleanup to prevent duplicate handlers on re-mount.
       socket.off("match:created", handleCreated);
       socket.off("match:deleted", handleDeleted);
       socket.off("match:status:update", handleStatusUpadte);
     };
   }, []);
-
-  useEffect(() => {
-    console.log("matches", matches);
-  }, [matches]);
 
   const statusBadge = (status: Match["status"]) => {
     const map: Record<Match["status"], string> = {

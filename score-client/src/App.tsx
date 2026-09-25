@@ -14,7 +14,13 @@ function App() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
+    // Opens the socket connection once when the app mounts.
+    // The socket is configured with autoConnect: false so we control when it connects.
     socket.connect();
+
+    // [LISTENER] connect
+    // Fires once the WebSocket handshake with the server succeeds.
+    // Used here only for debug logging to confirm the connection is alive.
     socket.on("connect", () => console.log("user connected"));
   }, []);
 

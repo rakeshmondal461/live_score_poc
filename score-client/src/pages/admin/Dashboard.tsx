@@ -23,7 +23,7 @@ export default function AdminDashboard() {
   const fetchMatches = async () => {
     setLoadingMatches(true);
     try {
-      const data = (await api.matches.list()) as Match[];
+      const data = await api.matches.list();
       setMatches(data);
     } catch (err: unknown) {
       setFetchError(
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let ignore = false;
-    (api.matches.list() as Promise<Match[]>)
+    api.matches.list()
       .then((data) => {
         if (!ignore) {
           setMatches(data);

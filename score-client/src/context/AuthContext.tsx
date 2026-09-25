@@ -5,7 +5,7 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import type { User, AuthResponse } from '../types.ts';
+import type { User } from '../types.ts';
 import { api } from '../api';
 
 interface AuthContextType {
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     let isMounted = true;
-    (api.auth.me() as Promise<{ user: User }>)
+    api.auth.me()
       .then((data) => {
         if (isMounted) {
           setUser(data.user);
@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [token]);
 
   const login = async (email: string, password: string): Promise<void> => {
-    const data = (await api.auth.login({ email, password })) as AuthResponse;
+    const data = await api.auth.login({ email, password });
     localStorage.setItem('token', data.token);
     setToken(data.token);
     setUser(data.user);
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     email: string,
     password: string
   ): Promise<void> => {
-    const data = (await api.auth.register({ name, email, password })) as AuthResponse;
+    const data = await api.auth.register({ name, email, password });
     localStorage.setItem('token', data.token);
     setToken(data.token);
     setUser(data.user);
